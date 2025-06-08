@@ -57,6 +57,13 @@ export const apiRoutes = new Elysia({ prefix: "/api" })
   })
 
   .post("/exchange", async ({ query, body, request }) => {
+    const MAX_PAYLOAD_SIZE = 40 * 1024; // 40 kb
+    const payloadSize = JSON.stringify(body).length;
+
+    if (payloadSize > MAX_PAYLOAD_SIZE) {
+      return { error: "Payload too large" };
+    }
+
     return await recordHit({
       id: query.id,
       ipData: body,

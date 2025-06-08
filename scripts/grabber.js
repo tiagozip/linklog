@@ -203,6 +203,8 @@ const userInfo = async function () {
       const glInfo = {
         vendor: vendor,
         renderer: renderer,
+        version: gl.getParameter(gl.VERSION),
+        shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
       };
 
       params.forEach((paramName) => {
@@ -220,7 +222,44 @@ const userInfo = async function () {
 
       glInfo.extensions = gl.getSupportedExtensions()?.sort() || [];
 
-      return simpleHash(glInfo);
+      const ext = gl.getExtension("EXT_texture_filter_anisotropic");
+      if (ext) {
+        glInfo.maxAnisotropy = gl.getParameter(
+          ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT
+        );
+      }
+
+      const precisionFormats = {};
+      ["VERTEX_SHADER", "FRAGMENT_SHADER"].forEach((shaderType) => {
+        [
+          "LOW_FLOAT",
+          "MEDIUM_FLOAT",
+          "HIGH_FLOAT",
+          "LOW_INT",
+          "MEDIUM_INT",
+          "HIGH_INT",
+        ].forEach((precisionType) => {
+          try {
+            const format = gl.getShaderPrecisionFormat(
+              gl[shaderType],
+              gl[precisionType]
+            );
+            precisionFormats[`${shaderType}_${precisionType}`] = {
+              precision: format.precision,
+              rangeMin: format.rangeMin,
+              rangeMax: format.rangeMax,
+            };
+          } catch (e) {
+            precisionFormats[`${shaderType}_${precisionType}`] = null;
+          }
+        });
+      });
+      glInfo.precisionFormats = precisionFormats;
+
+      return {
+        hash: simpleHash(glInfo),
+        detailed: glInfo,
+      };
     } catch (e) {
       return null;
     }
@@ -257,8 +296,27 @@ const userInfo = async function () {
         setTimeout(() => {
           analyser.getFloatFrequencyData(dataArray);
           oscillator.stop(0);
+
+          const audioDetails = {
+            sampleRate: audioContext.sampleRate,
+            state: audioContext.state,
+            maxChannelCount: audioContext.destination.maxChannelCount,
+            numberOfInputs: audioContext.destination.numberOfInputs,
+            numberOfOutputs: audioContext.destination.numberOfOutputs,
+            channelCount: audioContext.destination.channelCount,
+            channelCountMode: audioContext.destination.channelCountMode,
+            channelInterpretation:
+              audioContext.destination.channelInterpretation,
+            baseLatency: audioContext.baseLatency || null,
+            outputLatency: audioContext.outputLatency || null,
+            dataArray: Array.from(dataArray).join(","),
+          };
+
           audioContext.close();
-          resolve(simpleHash(Array.from(dataArray).join(",")));
+          resolve({
+            hash: simpleHash(audioDetails),
+            detailed: audioDetails,
+          });
         }, 100);
       } catch (e) {
         resolve(null);
@@ -334,6 +392,7 @@ const userInfo = async function () {
       const serifWidth = getWidth("serif");
       const monospaceWidth = getWidth("monospace");
 
+      const availableFonts = [];
       fontsToTest.forEach((font) => {
         const width = getWidth(font);
         if (
@@ -342,13 +401,22 @@ const userInfo = async function () {
           width !== monospaceWidth
         ) {
           detectedFonts[font] = true;
+          availableFonts.push(font);
         } else {
           detectedFonts[font] = false;
         }
       });
 
       document.body.removeChild(dummyEl);
-      return simpleHash(detectedFonts);
+
+      return {
+        hash: simpleHash(detectedFonts),
+        detailed: {
+          availableFonts: availableFonts,
+          total: availableFonts.length,
+          testedFonts: fontsToTest.length,
+        },
+      };
     } catch (e) {
       return null;
     }
@@ -669,7 +737,7 @@ const userInfo = async function () {
     },
     speed: async function () {
       return new Promise(async (res) => {
-        const fileUrl = "https://speed.cloudflare.com/__down?bytes=5000000"; // 5MB for better accuracy
+        const fileUrl = "https://speed.cloudflare.com/__down?bytes=5000000";
 
         const iterations = 5;
         const results = [];
@@ -1027,18 +1095,49 @@ const userInfo = async function () {
             return;
           }
 
+          const startTime = performance.now();
           const pc = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              { urls: "stun:stun1.l.google.com:19302" },
+            ],
           });
 
-          const ips = [];
+          const candidates = [];
+          const candidateTypes = new Set();
+          let gatheringComplete = false;
+
           pc.onicecandidate = (event) => {
             if (event.candidate) {
-              const ip =
-                event.candidate.candidate.match(/(\d+\.\d+\.\d+\.\d+)/);
-              if (ip && !ips.includes(ip[1])) {
-                ips.push(ip[1]);
-              }
+              const candidate = event.candidate.candidate;
+              const ip = candidate.match(/(\d+\.\d+\.\d+\.\d+)/);
+
+              let type = "unknown";
+              if (candidate.includes("typ host")) type = "host";
+              else if (candidate.includes("typ srflx")) type = "srflx";
+              else if (candidate.includes("typ prflx")) type = "prflx";
+              else if (candidate.includes("typ relay")) type = "relay";
+
+              candidateTypes.add(type);
+
+              candidates.push({
+                ip: ip ? ip[1] : null,
+                type: type,
+                protocol: candidate.includes("UDP") ? "UDP" : "TCP",
+                port: candidate.match(/(\d+) typ/)?.[1] || null,
+                priority: event.candidate.priority || null,
+                foundation: event.candidate.foundation || null,
+                component: event.candidate.component || null,
+                transport: event.candidate.protocol || null,
+              });
+            } else {
+              gatheringComplete = true;
+            }
+          };
+
+          pc.onicegatheringstatechange = () => {
+            if (pc.iceGatheringState === "complete") {
+              gatheringComplete = true;
             }
           };
 
@@ -1047,14 +1146,40 @@ const userInfo = async function () {
             .then((offer) => pc.setLocalDescription(offer))
             .catch(() => {});
 
-          setTimeout(() => {
-            pc.close();
-            resolve({
-              supported: true,
-              localIPs: ips,
-              iceConnectionState: pc.iceConnectionState,
-            });
-          }, 2000);
+          const checkComplete = () => {
+            if (gatheringComplete || performance.now() - startTime > 3000) {
+              const gatheringTime = performance.now() - startTime;
+              pc.close();
+
+              resolve({
+                supported: true,
+                candidates: candidates,
+                candidateTypes: Array.from(candidateTypes),
+                gatheringTime: gatheringTime,
+                iceConnectionState: pc.iceConnectionState,
+                iceGatheringState: pc.iceGatheringState,
+                localIPs: [
+                  ...new Set(candidates.map((c) => c.ip).filter(Boolean)),
+                ],
+                stats: {
+                  totalCandidates: candidates.length,
+                  uniqueIPs: new Set(
+                    candidates.map((c) => c.ip).filter(Boolean)
+                  ).size,
+                  hostCandidates: candidates.filter((c) => c.type === "host")
+                    .length,
+                  srflxCandidates: candidates.filter((c) => c.type === "srflx")
+                    .length,
+                  relayCandidates: candidates.filter((c) => c.type === "relay")
+                    .length,
+                },
+              });
+            } else {
+              setTimeout(checkComplete, 100);
+            }
+          };
+
+          setTimeout(checkComplete, 100);
         } catch (e) {
           resolve({ supported: false, error: e.message });
         }
@@ -1421,6 +1546,222 @@ const userInfo = async function () {
       });
     },
 
+    inputDeviceCapabilities: function () {
+      try {
+        return {
+          pointerType: (() => {
+            if (window.matchMedia("(pointer: fine)").matches) return "fine";
+            if (window.matchMedia("(pointer: coarse)").matches) return "coarse";
+            return "none";
+          })(),
+          hoverCapability: window.matchMedia("(hover: hover)").matches
+            ? "hover"
+            : "none",
+          anyPointer: (() => {
+            if (window.matchMedia("(any-pointer: fine)").matches) return "fine";
+            if (window.matchMedia("(any-pointer: coarse)").matches)
+              return "coarse";
+            return "none";
+          })(),
+          anyHover: window.matchMedia("(any-hover: hover)").matches
+            ? "hover"
+            : "none",
+          maxTouchPoints: navigator.maxTouchPoints || 0,
+          touchSupport:
+            "ontouchstart" in window || navigator.maxTouchPoints > 0,
+          stylusSupport:
+            window.matchMedia("(pointer: fine)").matches &&
+            navigator.maxTouchPoints > 0,
+        };
+      } catch (e) {
+        return null;
+      }
+    },
+
+    advancedApiSupport: function () {
+      return {
+        speechSynthesis:
+          typeof speechSynthesis !== "undefined" ||
+          typeof SpeechSynthesisUtterance !== "undefined",
+        speechRecognition:
+          typeof SpeechRecognition !== "undefined" ||
+          typeof webkitSpeechRecognition !== "undefined",
+        bluetoothApi: typeof navigator.bluetooth !== "undefined",
+        nfcApi: typeof NDEFReader !== "undefined",
+        usbApi: typeof navigator.usb !== "undefined",
+        serialApi: typeof navigator.serial !== "undefined",
+        hidApi: typeof navigator.hid !== "undefined",
+        paymentRequest: typeof PaymentRequest !== "undefined",
+        virtualReality:
+          typeof navigator.getVRDisplays === "function" ||
+          typeof navigator.xr !== "undefined",
+        webXR: typeof navigator.xr !== "undefined",
+        webAuthentication:
+          typeof navigator.credentials !== "undefined" &&
+          typeof PublicKeyCredential !== "undefined",
+        webShare: typeof navigator.share === "function",
+        webLocks: typeof navigator.locks !== "undefined",
+        broadcastChannel: typeof BroadcastChannel !== "undefined",
+        screenWakeLock: typeof navigator.wakeLock !== "undefined",
+        eyeDropper: typeof EyeDropper !== "undefined",
+        fileSystemAccess: typeof window.showOpenFilePicker === "function",
+        webCodecs: typeof VideoEncoder !== "undefined",
+        trustedTypes: typeof trustedTypes !== "undefined",
+      };
+    },
+
+    cpuArchitecture: async function () {
+      try {
+        let wasmSupport = false;
+        let wasmFeatures = {};
+
+        if (typeof WebAssembly === "object") {
+          wasmSupport = true;
+
+          try {
+            wasmFeatures.simd = typeof WebAssembly.SIMD !== "undefined";
+          } catch (e) {
+            wasmFeatures.simd = false;
+          }
+
+          try {
+            wasmFeatures.threads =
+              typeof SharedArrayBuffer !== "undefined" &&
+              typeof Atomics !== "undefined";
+          } catch (e) {
+            wasmFeatures.threads = false;
+          }
+        }
+
+        const platform = navigator.platform.toLowerCase();
+        let archHint = "unknown";
+
+        if (platform.includes("arm") || platform.includes("aarch")) {
+          archHint = "arm";
+        } else if (
+          platform.includes("x86") ||
+          platform.includes("intel") ||
+          platform.includes("amd")
+        ) {
+          archHint = "x86";
+        } else if (
+          platform.includes("mac") &&
+          navigator.userAgent.includes("Macintosh")
+        ) {
+          archHint = navigator.userAgent.includes("Intel") ? "x86" : "arm";
+        }
+
+        return {
+          platform: navigator.platform,
+          archHint: archHint,
+          wasmSupport: wasmSupport,
+          wasmFeatures: wasmFeatures,
+          hardwareConcurrency: navigator.hardwareConcurrency || null,
+          deviceMemory: navigator.deviceMemory || null,
+        };
+      } catch (e) {
+        return null;
+      }
+    },
+
+    accessibilityFeatures: function () {
+      try {
+        return {
+          reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches,
+          reducedTransparency: window.matchMedia(
+            "(prefers-reduced-transparency: reduce)"
+          ).matches,
+          highContrast: window.matchMedia("(prefers-contrast: high)").matches,
+          lowContrast: window.matchMedia("(prefers-contrast: low)").matches,
+          colorScheme: window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light",
+          invertedColors: window.matchMedia("(inverted-colors: inverted)")
+            .matches,
+          forcedColors: window.matchMedia("(forced-colors: active)").matches,
+          screenReader: (() => {
+            return (
+              navigator.userAgent.includes("NVDA") ||
+              navigator.userAgent.includes("JAWS") ||
+              navigator.userAgent.includes("VoiceOver") ||
+              (window.speechSynthesis &&
+                window.speechSynthesis.getVoices().length > 0)
+            );
+          })(),
+        };
+      } catch (e) {
+        return null;
+      }
+    },
+
+    displayCapabilities: function () {
+      try {
+        return {
+          colorGamut: (() => {
+            if (window.matchMedia("(color-gamut: rec2020)").matches)
+              return "rec2020";
+            if (window.matchMedia("(color-gamut: p3)").matches) return "p3";
+            if (window.matchMedia("(color-gamut: srgb)").matches) return "srgb";
+            return "unknown";
+          })(),
+          dynamicRange: (() => {
+            if (window.matchMedia("(dynamic-range: high)").matches)
+              return "high";
+            if (window.matchMedia("(dynamic-range: standard)").matches)
+              return "standard";
+            return "unknown";
+          })(),
+          displayMode: (() => {
+            if (window.matchMedia("(display-mode: fullscreen)").matches)
+              return "fullscreen";
+            if (window.matchMedia("(display-mode: standalone)").matches)
+              return "standalone";
+            if (window.matchMedia("(display-mode: minimal-ui)").matches)
+              return "minimal-ui";
+            return "browser";
+          })(),
+          refreshRate: screen.refreshRate || null,
+          orientation: screen.orientation
+            ? {
+                type: screen.orientation.type,
+                angle: screen.orientation.angle,
+              }
+            : null,
+        };
+      } catch (e) {
+        return null;
+      }
+    },
+
+    securityFeatures: function () {
+      try {
+        return {
+          secureContext: window.isSecureContext || false,
+          crossOriginIsolated: window.crossOriginIsolated || false,
+          crypto:
+            typeof crypto !== "undefined" &&
+            typeof crypto.subtle !== "undefined",
+          permissions: typeof navigator.permissions !== "undefined",
+          featurePolicy: typeof document.featurePolicy !== "undefined",
+          csp: (() => {
+            try {
+              const script = document.createElement("script");
+              script.innerHTML = "window.cspTest = true;";
+              document.head.appendChild(script);
+              document.head.removeChild(script);
+              return !window.cspTest;
+            } catch (e) {
+              return true;
+            }
+          })(),
+          trustedTypes: typeof trustedTypes !== "undefined",
+        };
+      } catch (e) {
+        return null;
+      }
+    },
+
     misc: function () {
       return {
         workerSupport: typeof Worker !== "undefined",
@@ -1514,6 +1855,12 @@ const userInfo = async function () {
     domFingerprint,
     errorFingerprint,
     interactionFingerprint,
+    inputDeviceCapabilities,
+    advancedApiSupport,
+    cpuArchitecture,
+    accessibilityFeatures,
+    displayCapabilities,
+    securityFeatures,
   ] = await Promise.all([
     grab.browser(),
     grab.speed(),
@@ -1543,6 +1890,12 @@ const userInfo = async function () {
     grab.domFingerprint(),
     grab.errorFingerprint(),
     grab.interactionFingerprint(),
+    grab.inputDeviceCapabilities(),
+    grab.advancedApiSupport(),
+    grab.cpuArchitecture(),
+    grab.accessibilityFeatures(),
+    grab.displayCapabilities(),
+    grab.securityFeatures(),
   ]);
 
   const result = {
@@ -1584,11 +1937,14 @@ const userInfo = async function () {
       clipboard,
       sensors: deviceSensors,
       hardware: hardwareFingerprint,
+      inputCapabilities: inputDeviceCapabilities,
+      display: displayCapabilities,
     },
 
     os: {
       mobile: grab.isMobile(),
       name: grab.getOS(),
+      architecture: cpuArchitecture,
     },
 
     page: {
@@ -1631,6 +1987,12 @@ const userInfo = async function () {
       permissions,
       mediaCapabilities,
       misc: grab.misc(),
+      accessibility: accessibilityFeatures,
+      security: securityFeatures,
+    },
+
+    apis: {
+      advanced: advancedApiSupport,
     },
 
     compositeFingerprint: (() => {
@@ -1643,11 +2005,14 @@ const userInfo = async function () {
         hardwareConcurrency: navigator.hardwareConcurrency,
         deviceMemory: navigator.deviceMemory,
         canvas: generateEnhancedCanvasFingerprint(),
-        webgl: generateWebGLFingerprint(),
-        fonts: generateFontListFingerprint(),
+        webgl: generateWebGLFingerprint()?.hash || null,
+        fonts: generateFontListFingerprint()?.hash || null,
         hardware: hardwareFingerprint.cpuSpeed,
         css: simpleHash(cssFingerprint),
         dom: simpleHash(domFingerprint),
+        webAudio: webAudioFingerprint?.hash || null,
+        inputCapabilities: simpleHash(inputDeviceCapabilities),
+        advancedApis: simpleHash(advancedApiSupport),
       };
       return simpleHash(data);
     })(),

@@ -36,48 +36,6 @@ const utils = {
     return hash.toString(16);
   },
 
-  storage: {
-    get(key) {
-      try {
-        return localStorage.getItem(key);
-      } catch (error) {
-        console.warn("Storage access failed:", error);
-        return null;
-      }
-    },
-
-    set(key, value) {
-      try {
-        localStorage.setItem(key, value);
-        return true;
-      } catch (error) {
-        console.warn("Storage write failed:", error);
-        return false;
-      }
-    },
-
-    remove(key) {
-      try {
-        localStorage.removeItem(key);
-        return true;
-      } catch (error) {
-        console.warn("Storage remove failed:", error);
-        return false;
-      }
-    },
-
-    getKeys(prefix) {
-      try {
-        return Object.keys(localStorage).filter((key) =>
-          key.startsWith(prefix)
-        );
-      } catch (error) {
-        console.warn("Storage keys access failed:", error);
-        return [];
-      }
-    },
-  },
-
   async apiCall(endpoint, options = {}) {
     try {
       const response = await fetch(endpoint, {
@@ -95,7 +53,7 @@ const utils = {
       return await response.json();
     } catch (error) {
       console.error("API call failed:", error);
-      throw new Error(`Network error: ${error.message}`);
+      throw new Error(error.message);
     }
   },
 };
@@ -136,7 +94,7 @@ const views = {
       </div>
       
       <div class="detail-sections">
-        ${this.renderDetailSection("IP Information", [
+        ${this.renderDetailSection("IP", [
           ["IP Address", hit.ip_data?.ip?.ip],
           ["ISP", hit.ip_data?.ip?.isp],
           ["Host", hit.ip_data?.ip?.host],
@@ -174,7 +132,7 @@ const views = {
           ["Date/Time", hit.ip_data?.ip?.datetime],
         ])}
         
-        ${this.renderDetailSection("Browser Information", [
+        ${this.renderDetailSection("Browser", [
           ["Name", hit.ip_data?.browser?.browserName],
           ["Version", hit.ip_data?.browser?.browserVersion],
           ["User Agent", hit.ip_data?.browser?.userAgent],
@@ -212,12 +170,12 @@ const views = {
           ["MIME Types Length", hit.ip_data?.browser?.mimeTypesLength],
         ])}
         
-        ${this.renderDetailSection("Operating System", [
+        ${this.renderDetailSection("OS", [
           ["Mobile Device", hit.ip_data?.os?.mobile],
           ["OS Name", hit.ip_data?.os?.name],
         ])}
         
-        ${this.renderDetailSection("Device Information", [
+        ${this.renderDetailSection("Device", [
           ["Screen Width", hit.ip_data?.device?.screen?.width],
           ["Screen Height", hit.ip_data?.device?.screen?.height],
           ["Color Depth", hit.ip_data?.device?.screen?.colorDepth],
@@ -251,7 +209,7 @@ const views = {
           ],
         ])}
 
-        ${this.renderDetailSection("Hardware Information", [
+        ${this.renderDetailSection("Hardware", [
           [
             "CPU Speed Test",
             hit.ip_data?.device?.hardware?.cpuSpeed
@@ -326,7 +284,7 @@ const views = {
           ["Proximity Sensor", hit.ip_data?.device?.sensors?.proximity],
         ])}
 
-        ${this.renderDetailSection("Battery Information", [
+        ${this.renderDetailSection("Battery", [
           ["Charging", hit.ip_data?.device?.battery?.charging],
           ["Charging Time", hit.ip_data?.device?.battery?.chargingTime],
           ["Discharging Time", hit.ip_data?.device?.battery?.dischargingTime],
@@ -360,7 +318,7 @@ const views = {
           ],
         ])}
 
-        ${this.renderDetailSection("Performance Information", [
+        ${this.renderDetailSection("Performance", [
           [
             "Memory Used JS Heap",
             hit.ip_data?.device?.performanceInfo?.memory?.usedJSHeapSize
@@ -401,7 +359,7 @@ const views = {
           ],
         ])}
 
-        ${this.renderDetailSection("Storage Information", [
+        ${this.renderDetailSection("Storage", [
           [
             "Quota",
             hit.ip_data?.device?.storage?.quota
@@ -441,7 +399,7 @@ const views = {
           ],
         ])}
 
-        ${this.renderDetailSection("Network Information", [
+        ${this.renderDetailSection("Network", [
           ["Connection Type", hit.ip_data?.network?.connection?.type],
           ["Effective Type", hit.ip_data?.network?.connection?.effectiveType],
           [
@@ -468,10 +426,22 @@ const views = {
           ],
         ])}
 
+        ${console.log(hit.ip_data?.fingerprints)}
+
         ${this.renderDetailSection("Advanced Fingerprints", [
           ["Canvas Fingerprint", hit.ip_data?.fingerprints?.canvas],
-          ["WebGL Fingerprint", hit.ip_data?.fingerprints?.webgl],
-          ["WebAudio Fingerprint", hit.ip_data?.fingerprints?.webAudio],
+          [
+            "WebGL Fingerprint",
+            `${hit.ip_data?.fingerprints?.webgl?.hash} (${JSON.stringify(
+              hit.ip_data?.fingerprints?.webgl?.detailed
+            )})`,
+          ],
+          [
+            "WebAudio Fingerprint",
+            `${hit.ip_data?.fingerprints?.webAudio?.hash} (${JSON.stringify(
+              hit.ip_data?.fingerprints?.webAudio?.detailed
+            )})`,
+          ],
           ["Font List Fingerprint", hit.ip_data?.fingerprints?.fonts],
           ["WebAssembly Support", hit.ip_data?.fingerprints?.wasm?.supported],
           [
@@ -666,12 +636,291 @@ const views = {
 
         ${this.renderPermissionsSection(hit.system?.permissions)}
 
-        ${this.renderDetailSection("Media Capabilities", [
+        ${this.renderDetailSection("Media capabilities", [
           ["H264 Video", hit.system?.mediaCapabilities?.h264Video],
           ["AAC Audio", hit.system?.mediaCapabilities?.aacAudio],
         ])}
+
+        ${this.renderDetailSection("WebGL", [
+          ["Vendor", hit.ip_data?.fingerprints?.webgl?.detailed?.vendor],
+          ["Renderer", hit.ip_data?.fingerprints?.webgl?.detailed?.renderer],
+          ["Version", hit.ip_data?.fingerprints?.webgl?.detailed?.version],
+          [
+            "Shading Language Version",
+            hit.ip_data?.fingerprints?.webgl?.detailed?.shadingLanguageVersion,
+          ],
+          [
+            "Max Anisotropy",
+            hit.ip_data?.fingerprints?.webgl?.detailed?.maxAnisotropy,
+          ],
+          [
+            "Max Texture Size",
+            hit.ip_data?.fingerprints?.webgl?.detailed?.MAX_TEXTURE_SIZE,
+          ],
+          [
+            "Max Viewport Dims",
+            Object.values(
+              hit.ip_data?.fingerprints?.webgl?.detailed?.MAX_VIEWPORT_DIMS ||
+                {}
+            ).join("×"),
+          ],
+          [
+            "Max Vertex Attribs",
+            hit.ip_data?.fingerprints?.webgl?.detailed?.MAX_VERTEX_ATTRIBS,
+          ],
+          [
+            "Supported Extensions",
+            hit.ip_data?.fingerprints?.webgl?.detailed?.extensions?.length
+              ? `${hit.ip_data.fingerprints.webgl.detailed.extensions.length} extensions`
+              : undefined,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Audio", [
+          [
+            "Sample Rate",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.sampleRate
+              ? `${hit.ip_data.fingerprints.webAudio.detailed.sampleRate} Hz`
+              : undefined,
+          ],
+          [
+            "Audio Context State",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.state,
+          ],
+          [
+            "Max Channel Count",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.maxChannelCount,
+          ],
+          [
+            "Number of Inputs",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.numberOfInputs,
+          ],
+          [
+            "Number of Outputs",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.numberOfOutputs,
+          ],
+          [
+            "Channel Count",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.channelCount,
+          ],
+          [
+            "Channel Count Mode",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.channelCountMode,
+          ],
+          [
+            "Channel Interpretation",
+            hit.ip_data?.fingerprints?.webAudio?.detailed
+              ?.channelInterpretation,
+          ],
+          [
+            "Base Latency",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.baseLatency
+              ? `${hit.ip_data.fingerprints.webAudio.detailed.baseLatency.toFixed(
+                  6
+                )}s`
+              : undefined,
+          ],
+          [
+            "Output Latency",
+            hit.ip_data?.fingerprints?.webAudio?.detailed?.outputLatency
+              ? `${hit.ip_data.fingerprints.webAudio.detailed.outputLatency.toFixed(
+                  6
+                )}s`
+              : undefined,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Fonts", [
+          [
+            "Total Fonts Detected",
+            hit.ip_data?.fingerprints?.fonts?.detailed?.total,
+          ],
+          [
+            "Fonts Tested",
+            hit.ip_data?.fingerprints?.fonts?.detailed?.testedFonts,
+          ],
+          [
+            "Available Fonts",
+            hit.ip_data?.fingerprints?.fonts?.detailed?.availableFonts?.join(
+              ", "
+            ),
+          ],
+        ])}
+
+        ${this.renderDetailSection("WebRTC", [
+          [
+            "Gathering Time",
+            hit.ip_data?.network?.webrtc?.gatheringTime
+              ? `${hit.ip_data.network.webrtc.gatheringTime.toFixed(2)}ms`
+              : undefined,
+          ],
+          [
+            "Candidate Types",
+            hit.ip_data?.network?.webrtc?.candidateTypes?.join(", "),
+          ],
+          [
+            "Total Candidates",
+            hit.ip_data?.network?.webrtc?.stats?.totalCandidates,
+          ],
+          ["Unique IPs", hit.ip_data?.network?.webrtc?.stats?.uniqueIPs],
+          [
+            "Host Candidates",
+            hit.ip_data?.network?.webrtc?.stats?.hostCandidates,
+          ],
+          [
+            "SRFLX Candidates",
+            hit.ip_data?.network?.webrtc?.stats?.srflxCandidates,
+          ],
+          [
+            "Relay Candidates",
+            hit.ip_data?.network?.webrtc?.stats?.relayCandidates,
+          ],
+          [
+            "ICE Gathering State",
+            hit.ip_data?.network?.webrtc?.iceGatheringState,
+          ],
+          [
+            "ICE Connection State",
+            hit.ip_data?.network?.webrtc?.iceConnectionState,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Input Device Capabilities", [
+          ["Pointer Type", hit.ip_data?.device?.inputCapabilities?.pointerType],
+          [
+            "Hover Capability",
+            hit.ip_data?.device?.inputCapabilities?.hoverCapability,
+          ],
+          ["Any Pointer", hit.ip_data?.device?.inputCapabilities?.anyPointer],
+          ["Any Hover", hit.ip_data?.device?.inputCapabilities?.anyHover],
+          [
+            "Max Touch Points",
+            hit.ip_data?.device?.inputCapabilities?.maxTouchPoints,
+          ],
+          [
+            "Touch Support",
+            hit.ip_data?.device?.inputCapabilities?.touchSupport,
+          ],
+          [
+            "Stylus Support",
+            hit.ip_data?.device?.inputCapabilities?.stylusSupport,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Advanced API Support", [
+          ["Speech Synthesis", hit.ip_data?.apis?.advanced?.speechSynthesis],
+          [
+            "Speech Recognition",
+            hit.ip_data?.apis?.advanced?.speechRecognition,
+          ],
+          ["Bluetooth API", hit.ip_data?.apis?.advanced?.bluetoothApi],
+          ["NFC API", hit.ip_data?.apis?.advanced?.nfcApi],
+          ["USB API", hit.ip_data?.apis?.advanced?.usbApi],
+          ["Serial API", hit.ip_data?.apis?.advanced?.serialApi],
+          ["HID API", hit.ip_data?.apis?.advanced?.hidApi],
+          ["Payment Request", hit.ip_data?.apis?.advanced?.paymentRequest],
+          ["Virtual Reality", hit.ip_data?.apis?.advanced?.virtualReality],
+          ["WebXR", hit.ip_data?.apis?.advanced?.webXR],
+          [
+            "Web Authentication",
+            hit.ip_data?.apis?.advanced?.webAuthentication,
+          ],
+          ["Web Share", hit.ip_data?.apis?.advanced?.webShare],
+          ["Web Locks", hit.ip_data?.apis?.advanced?.webLocks],
+          ["Broadcast Channel", hit.ip_data?.apis?.advanced?.broadcastChannel],
+          ["Screen Wake Lock", hit.ip_data?.apis?.advanced?.screenWakeLock],
+          ["Eye Dropper", hit.ip_data?.apis?.advanced?.eyeDropper],
+          ["File System Access", hit.ip_data?.apis?.advanced?.fileSystemAccess],
+          ["Web Codecs", hit.ip_data?.apis?.advanced?.webCodecs],
+          ["Trusted Types", hit.ip_data?.apis?.advanced?.trustedTypes],
+        ])}
+
+        ${this.renderDetailSection("CPU Architecture", [
+          ["Platform", hit.ip_data?.os?.architecture?.platform],
+          ["Architecture Hint", hit.ip_data?.os?.architecture?.archHint],
+          ["WebAssembly Support", hit.ip_data?.os?.architecture?.wasmSupport],
+          ["SIMD Support", hit.ip_data?.os?.architecture?.wasmFeatures?.simd],
+          [
+            "Threads Support",
+            hit.ip_data?.os?.architecture?.wasmFeatures?.threads,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Accessibility Features", [
+          ["Reduced Motion", hit.ip_data?.system?.accessibility?.reducedMotion],
+          [
+            "Reduced Transparency",
+            hit.ip_data?.system?.accessibility?.reducedTransparency,
+          ],
+          ["High Contrast", hit.ip_data?.system?.accessibility?.highContrast],
+          ["Low Contrast", hit.ip_data?.system?.accessibility?.lowContrast],
+          ["Color Scheme", hit.ip_data?.system?.accessibility?.colorScheme],
+          [
+            "Inverted Colors",
+            hit.ip_data?.system?.accessibility?.invertedColors,
+          ],
+          ["Forced Colors", hit.ip_data?.system?.accessibility?.forcedColors],
+          [
+            "Screen Reader Detection",
+            hit.ip_data?.system?.accessibility?.screenReader,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Display Capabilities", [
+          ["Color Gamut", hit.ip_data?.device?.display?.colorGamut],
+          ["Dynamic Range", hit.ip_data?.device?.display?.dynamicRange],
+          ["Display Mode", hit.ip_data?.device?.display?.displayMode],
+          [
+            "Refresh Rate",
+            hit.ip_data?.device?.display?.refreshRate
+              ? `${hit.ip_data.device.display.refreshRate} Hz`
+              : undefined,
+          ],
+          ["Orientation Type", hit.ip_data?.device?.display?.orientation?.type],
+          [
+            "Orientation Angle",
+            hit.ip_data?.device?.display?.orientation?.angle
+              ? `${hit.ip_data.device.display.orientation.angle}°`
+              : undefined,
+          ],
+        ])}
+
+        ${this.renderDetailSection("Security Features", [
+          ["Secure Context", hit.ip_data?.system?.security?.secureContext],
+          [
+            "Cross Origin Isolated",
+            hit.ip_data?.system?.security?.crossOriginIsolated,
+          ],
+          ["Crypto API", hit.ip_data?.system?.security?.crypto],
+          ["Permissions API", hit.ip_data?.system?.security?.permissions],
+          ["Feature Policy", hit.ip_data?.system?.security?.featurePolicy],
+          ["Content Security Policy", hit.ip_data?.system?.security?.csp],
+          ["Trusted Types", hit.ip_data?.system?.security?.trustedTypes],
+        ])}
+
+        ${
+          hit.ip_data?._metadata?.truncated
+            ? this.renderDetailSection("Data", [
+                [
+                  "Original Size",
+                  hit.ip_data._metadata.originalSize
+                    ? `${(hit.ip_data._metadata.originalSize / 1024).toFixed(
+                        2
+                      )} KB`
+                    : undefined,
+                ],
+                ["Data Truncated", hit.ip_data._metadata.truncated],
+                [
+                  "Max Allowed Size",
+                  hit.ip_data._metadata.maxSize
+                    ? `${(hit.ip_data._metadata.maxSize / 1024).toFixed(2)} KB`
+                    : undefined,
+                ],
+              ])
+            : ""
+        }
         
-        ${this.renderDetailSection("Additional Information", [
+        ${this.renderDetailSection("Advanced", [
           ["Referrer", hit.page?.referrer || "Direct visit"],
           ["Page URL", hit.page?.url],
           ["Domain", hit.page?.domain],
@@ -709,26 +958,29 @@ const views = {
 
     return `
       <div class="detail-section">
-        <h3 class="section-title">${title}</h3>
-        <div class="detail-grid">
-          ${validRows
-            .map(
-              ([label, value, dontEscape]) =>
-                `<div class="detail-row">
-                  <span class="detail-label">${label}</span>
-                  <span class="detail-value">${
-                    dontEscape ? String(value) : utils.escapeHtml(String(value))
-                  }</span>
-                </div>`
-            )
-            .join("")}
-        </div>
+      <h3 class="section-title">${title}</h3>
+      <div class="detail-grid">
+        ${validRows
+          .map(([label, value, dontEscape]) => {
+            let displayValue = String(value);
+            if (displayValue.length > 800) {
+              displayValue = displayValue.slice(0, 800) + "...";
+            }
+            return `<div class="detail-row">
+            <span class="detail-label">${label}</span>
+            <span class="detail-value">${
+              dontEscape ? displayValue : utils.escapeHtml(displayValue)
+            }</span>
+          </div>`;
+          })
+          .join("")}
+      </div>
       </div>
     `;
   },
 
   async showLinkDetails(slug, preloadedResponse = null) {
-    const key = utils.storage.get(`linklog--${slug}`);
+    const key = localStorage.getItem(`linklog--${slug}`);
 
     $("main").innerHTML =
       '<div class="loader-wrap"><div class="loader"></div></div>';
@@ -802,7 +1054,7 @@ const views = {
       </div>
       
       <div class="hits-section">
-        <h2>Visitor Activity</h2>
+        <h2>Visits</h2>
         <div class="hits-container">
           ${
             response.hits?.length > 0
@@ -842,20 +1094,31 @@ const views = {
     });
   },
 
-  renderHitCard(hit, response, slug) {
-    if (hit.removed) {
-      return `
-        <div class="hit-card hit-card-removed">
-          <div class="hit-card-content">
-            <span class="removed-indicator">Record deleted</span>
-          </div>
-        </div>
-      `;
-    }
+  renderHitCard(hit, response) {
+    const webglHash =
+      hit.ip_data?.fingerprints?.webgl?.hash ||
+      hit.ip_data?.fingerprints?.webgl;
+    const webglVendor = hit.ip_data?.fingerprints?.webgl?.detailed?.vendor;
+    const webglRenderer = hit.ip_data?.fingerprints?.webgl?.detailed?.renderer;
+
+    const audioHash =
+      hit.ip_data?.fingerprints?.webAudio?.hash ||
+      hit.ip_data?.fingerprints?.webAudio;
+    const audioSampleRate =
+      hit.ip_data?.fingerprints?.webAudio?.detailed?.sampleRate;
+
+    const fontCount = hit.ip_data?.fingerprints?.fonts?.detailed?.total;
+
+    const truncated = hit.ip_data?._metadata?.truncated;
 
     return `
       <div class="hit-card" data-hit-index="${response.hits.indexOf(hit)}">
         <div class="hit-card-content">
+          ${
+            truncated
+              ? '<div class="truncated-badge">⚠️ Data Truncated</div>'
+              : ""
+          }
           <div class="hit-primary">
             <div class="hit-location">
               <span class="location-icon">📍</span>
@@ -877,12 +1140,22 @@ const views = {
             </div>
             <div class="hit-os">
               ${utils.escapeHtml(hit.ip_data?.os?.name || "Unknown OS")}
+              ${
+                hit.ip_data?.os?.architecture?.archHint
+                  ? ` (${hit.ip_data.os.architecture.archHint})`
+                  : ""
+              }
             </div>
             <div class="hit-device">
               ${hit.ip_data?.device?.screen?.width}×${
       hit.ip_data?.device?.screen?.height
     }
               ${hit.ip_data?.os?.mobile ? " (Mobile)" : " (Desktop)"}
+              ${
+                hit.ip_data?.device?.inputCapabilities?.pointerType
+                  ? ` - ${hit.ip_data.device.inputCapabilities.pointerType}`
+                  : ""
+              }
             </div>
           </div>
           <div class="hit-fingerprint">
@@ -904,13 +1177,14 @@ const views = {
             `
                 : ""
             }
+            
             ${
-              hit.ip_data?.fingerprints?.webgl
+              webglVendor || webglRenderer
                 ? `
-              <div class="webgl-fingerprint">
-                <span class="label">WebGL:</span>
+              <div class="gpu-info">
+                <span class="label">GPU:</span>
                 <span class="value">${utils.escapeHtml(
-                  hit.ip_data.fingerprints.webgl
+                  webglRenderer || webglVendor || "Unknown"
                 )}</span>
               </div>
             `
@@ -959,7 +1233,7 @@ const views = {
       $("main").innerHTML =
         '<div class="loader-wrap"><div class="loader"></div></div>';
 
-      const key = utils.storage.get(`linklog--${slug}`);
+      const key = localStorage.getItem(`linklog--${slug}`);
 
       try {
         const deleteResponse = await utils.apiCall(
@@ -976,7 +1250,7 @@ const views = {
           return;
         }
 
-        utils.storage.remove(`linklog--${slug}`);
+        localStorage.removeItem(`linklog--${slug}`);
         location.reload();
       } catch (error) {
         $("main").innerHTML = `
@@ -1019,7 +1293,7 @@ const views = {
         return;
       }
 
-      utils.storage.set(`linklog--${response.slug}`, response.key);
+      localStorage.setItem(`linklog--${response.slug}`, response.key);
       this.addLinkToSidebar(response.slug);
       this.showLinkDetails(response.slug);
     } catch (error) {
@@ -1058,7 +1332,13 @@ class App {
   }
 
   loadSavedLinks() {
-    const linkKeys = utils.storage.getKeys("linklog--");
+    const linkKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("linklog--")) {
+        linkKeys.push(key);
+      }
+    }
 
     linkKeys.forEach((key) => {
       const slug = key.replace("linklog--", "");

@@ -10,8 +10,6 @@ body {
 }
 
 aside {
-  background: rgb(var(--surface));
-  border-right: 1px solid rgb(var(--border));
   display: flex;
   flex-direction: column;
   padding: 2rem 0.8rem;
@@ -104,13 +102,11 @@ aside ul a[disabled] {
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
   font-family: inherit;
 }
 
 .btn-primary:hover {
   background: rgb(124, 58, 237);
-  box-shadow: var(--shadow-md);
 }
 
 .btn-secondary {
@@ -137,7 +133,6 @@ aside ul a[disabled] {
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
 }
 
 .btn-danger:hover {
@@ -227,7 +222,6 @@ aside ul a[disabled] {
   max-width: 400px;
   width: 100%;
   text-align: center;
-  box-shadow: var(--shadow-lg);
 }
 
 .confirm-content h1 {
@@ -376,11 +370,6 @@ aside ul a[disabled] {
   border: 1px solid rgb(var(--border));
   border-radius: var(--radius-lg);
   padding: 1.25rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.hit-card:hover {
-  box-shadow: var(--shadow-md);
 }
 
 .hit-card-removed {
@@ -510,8 +499,7 @@ aside ul a[disabled] {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid rgb(var(--border));
+  padding: 0.1rem 0;
 }
 
 .detail-row:last-child {

@@ -4,7 +4,7 @@
 
 body {
   display: grid;
-  grid-template-columns: 270px 1fr;
+  grid-template-columns: 215px 1fr;
   gap: 0;
   min-height: 100vh;
 }
@@ -412,20 +412,24 @@ aside ul a[disabled] {
 }
 
 .hit-ip {
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: rgb(var(--muted));
-  background: rgb(var(--background));
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
 }
 
 .hit-secondary {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
-  color: rgb(var(--muted));
+  font-size: 15px;
+  color: rgb(var(--foreground));
+}
+
+.hit-fingerprint > div > .label {
+  font-weight: 600;
+}
+
+.hit-fingerprint > div > .value {
+  opacity: 0.9;
 }
 
 .hit-actions {

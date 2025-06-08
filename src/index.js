@@ -10,6 +10,7 @@ import { minify } from "terser";
 const app = new Elysia()
   .onBeforeHandle(async (ctx) => {
     if (
+      !(process.env["ENV"] === "dev") &&
       process.env["CF-HOST"] &&
       ctx.headers["host"] !== process.env["CF-HOST"]
     ) {

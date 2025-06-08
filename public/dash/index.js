@@ -437,6 +437,7 @@ const views = {
                 (ext) => `<span class="tag">${utils.escapeHtml(ext)}</span>`
               )
               .join(""),
+            true,
           ],
         ])}
 
@@ -771,9 +772,7 @@ const views = {
         </div>
         
         <h1 class="link-title">
-          <span class="domain">${location.host}/</span>${utils.escapeHtml(
-      slug
-    )}
+          <span class="domain">${location.host}/</span>${utils.escapeHtml(slug)}
         </h1>
         
         <div class="link-meta">
@@ -888,8 +887,8 @@ const views = {
           </div>
           <div class="hit-fingerprint">
             <div class="fingerprint-info">
-              <span class="fingerprint-label">Composite:</span>
-              <span class="fingerprint-value">${utils.escapeHtml(
+              <span class="label">Composite:</span>
+              <span class="value">${utils.escapeHtml(
                 hit.ip_data?.compositeFingerprint || "N/A"
               )}</span>
             </div>
@@ -897,8 +896,8 @@ const views = {
               hit.ip_data?.fingerprints?.canvas
                 ? `
               <div class="canvas-fingerprint">
-                <span class="canvas-label">Canvas:</span>
-                <span class="canvas-value">${utils.escapeHtml(
+                <span class="label">Canvas:</span>
+                <span class="value">${utils.escapeHtml(
                   hit.ip_data.fingerprints.canvas
                 )}</span>
               </div>
@@ -909,8 +908,8 @@ const views = {
               hit.ip_data?.fingerprints?.webgl
                 ? `
               <div class="webgl-fingerprint">
-                <span class="webgl-label">WebGL:</span>
-                <span class="webgl-value">${utils.escapeHtml(
+                <span class="label">WebGL:</span>
+                <span class="value">${utils.escapeHtml(
                   hit.ip_data.fingerprints.webgl
                 )}</span>
               </div>
@@ -921,8 +920,8 @@ const views = {
               hit.ip_data?.device?.hardware?.cpuSpeed
                 ? `
               <div class="hardware-fingerprint">
-                <span class="hardware-label">CPU:</span>
-                <span class="hardware-value">${hit.ip_data.device.hardware.cpuSpeed} ops/10ms</span>
+                <span class="label">CPU:</span>
+                <span class="value">${hit.ip_data.device.hardware.cpuSpeed} ops/10ms</span>
               </div>
             `
                 : ""

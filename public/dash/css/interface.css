@@ -133,6 +133,9 @@ aside ul a[disabled] {
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
+  font-family: inherit;
+  margin-right: 12px;
+  transition: background 0.2s;
 }
 
 .btn-danger:hover {
@@ -219,7 +222,7 @@ aside ul a[disabled] {
   border: 1px solid rgb(var(--border));
   border-radius: var(--radius-lg);
   padding: 2rem;
-  max-width: 400px;
+  max-width: 450px;
   width: 100%;
   text-align: center;
 }

@@ -1219,7 +1219,7 @@ const views = {
           <p>This will permanently delete the link and all associated visitor data. This action cannot be undone.</p>
           <div class="confirm-actions">
             <button class="confirm-delete btn-danger">
-              Delete Permanently
+              Delete permanently
             </button>
             <button class="cancel-delete btn-secondary">
               Cancel

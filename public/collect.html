@@ -230,8 +230,11 @@
         box.classList.add("boxA");
       }, 300);
 
+      let done = false;
+
       let ii = setInterval(async () => {
-        if (!data) return;
+        if (!data || done) return;
+        done = true;
 
         clearInterval(ii);
 

@@ -8,6 +8,15 @@ import { apiRoutes } from "./api.js";
 import { minify } from "terser";
 
 const app = new Elysia()
+  .onBeforeHandle(async (ctx) => {
+    if (
+      process.env["CF-HOST"] &&
+      ctx.headers["host"] !== process.env["CF-HOST"]
+    ) {
+      await Bun.sleep(Math.random() * 10);
+      return "Invalid host header";
+    }
+  })
   .use(staticPlugin())
   .use(
     rateLimit({

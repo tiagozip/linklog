@@ -154,12 +154,13 @@
       const input = document.querySelector("input");
       const button = document.querySelector("button");
 
-      const urlRegex =
-        /^https?:\/\/(?:[-\w.])+(?:\:[0-9]+)?(?:\/(?:[\w\/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?$/;
-
       function updateButton() {
-        const isValid = urlRegex.test(input.value);
-        button.disabled = !isValid;
+        try {
+          new URL(input.value);
+          button.disabled = false;
+        } catch {
+          button.disabled = true;
+        }
       }
 
       function createLink() {

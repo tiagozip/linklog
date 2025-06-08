@@ -148,7 +148,6 @@ aside ul a[disabled] {
   border-radius: var(--radius-sm);
 }
 
-/* Status Indicators */
 .status-yes {
   background: rgba(var(--success), 0.1);
   color: rgb(var(--success));
@@ -187,27 +186,11 @@ aside ul a[disabled] {
   display: inline-block;
 }
 
-/* Loader */
 .loader-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 4rem 0;
-}
-
-.loader {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgb(var(--border));
-  border-top-color: rgb(var(--accent));
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .confirm-dialog {
@@ -353,7 +336,6 @@ aside ul a[disabled] {
   color: rgb(var(--accent));
 }
 
-/* Hits Section */
 .hits-section {
   margin-top: 3rem;
 }
@@ -460,7 +442,6 @@ aside ul a[disabled] {
   color: rgb(var(--muted));
 }
 
-/* Detail View */
 .detail-header {
   margin-bottom: 2rem;
 }

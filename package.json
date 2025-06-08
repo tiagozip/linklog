@@ -1,20 +1,21 @@
 {
   "name": "linklog",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
-    "url": "https://glitch.com/edit/#!/linklog"
+    "url": "https://github.com/tiagorangel1/linklog"
   },
   "main": "src/index.js",
   "description": "A powerful grabify alternative",
   "keywords": [
-    "node",
-    "glitch",
-    "express"
+    "bun",
+    "elysia",
+    "ip-grabber"
   ],
   "license": "Apache-2.0",
   "scripts": {
     "start": "bun run src/index.js",
-    "dev": "bun run --watch src/index.js"
+    "dev": "bun run --watch src/index.js",
+    "forever": "pm2 start src/index.js --name linklog"
   },
   "dependencies": {
     "@cap.js/server": "^1.0.15",

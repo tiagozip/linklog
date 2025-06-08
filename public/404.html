@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Page not found</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/assets/logo.svg" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+
+      * {
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+      body,
+      html {
+        min-height: 100vh;
+        overflow: hidden;
+        margin: 0px;
+        padding: 0px;
+      }
+      body {
+        background-color: #222;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        flex-direction: column;
+      }
+      .logo {
+        position: fixed;
+        top: 20px;
+        left: 0px;
+        right: 0px;
+        max-width: 35px;
+        width: 35px;
+        margin: 0px auto;
+        z-index: 6;
+        height: 35px;
+        opacity: .7;
+      }
+      .nyan {
+        width: 250px;
+        height: 250px;
+        pointer-events: none;
+        z-index: 5;
+      }
+      p,
+      a {
+        color: white;
+        text-align: center;
+        line-height: 1.5;
+        z-index: 5;
+      }
+      a {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 4px 8px;
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+        transform: rotate(-1deg);
+        margin-top: 15px;
+        transition: transform 0.2s, opacity 0.2s;
+        display: block;
+      }
+      a:hover {
+        transform: scale(1.1) rotate(-1deg);
+      }
+      #starField {
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        bottom: 0px;
+        right: 0px;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/assets/logo.svg" alt="Linklog logo" class="logo" />
+    <img
+      src="https://cdn.glitch.global/48352074-dba5-4a95-96e1-9025a0ba5c4d/404.webp"
+      alt="Nyan cat"
+      title="Nyan cat (credit: nyan.cat)"
+         class="nyan"
+    />
+    <p>Page not found. <a href="/">Return home</a></p>
+
+    <canvas id="starField"></canvas>
+  </body>
+  <script>
+    const canvas = document.getElementById("starField");
+    const ctx = canvas.getContext("2d");
+
+    let width, height, stars;
+    const numStars = 1600;
+    const maxDepth = 1000;
+
+    function setupCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    function createStars() {
+      stars = [];
+      for (let i = 0; i < numStars; i++) {
+        stars.push({
+          x: Math.random() * width - width / 2,
+          y: Math.random() * height - height / 2,
+          z: Math.random() * maxDepth,
+          scale: 0.1 + Math.random() * 0.9,
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.fillStyle = "#ffffff";
+      for (let star of stars) {
+        let x = star.x / (star.z * 0.001);
+        let y = star.y / (star.z * 0.001);
+
+        if (
+          x < -width / 2 ||
+          x > width / 2 ||
+          y < -height / 2 ||
+          y > height / 2
+        )
+          continue;
+
+        let d = star.z / maxDepth;
+        let size = (1 - d) * 3 * star.scale;
+
+        ctx.fillRect(x + width / 2, y + height / 2, size, size);
+      }
+    }
+
+    function moveStars() {
+      for (let star of stars) {
+        star.z -= 2;
+        if (star.z <= 0) {
+          star.z = maxDepth;
+          star.x = Math.random() * width - width / 2;
+          star.y = Math.random() * height - height / 2;
+        }
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = "rgba(23, 24, 26, 0.1)";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(performance.now() * 0.00002);
+      ctx.translate(-width / 2, -height / 2);
+
+      drawStars();
+      ctx.restore();
+
+      moveStars();
+      requestAnimationFrame(animate);
+    }
+
+    function init() {
+      setupCanvas();
+      createStars();
+      animate();
+    }
+
+    window.addEventListener("resize", () => {
+      setupCanvas();
+      createStars();
+    });
+
+    init();
+  </script>
+  <script defer src="https://uma.tiagorangel.com/script.js" data-website-id="a6f92d77-3c16-4d1c-be56-148f9f53529b"></script>
+</html>

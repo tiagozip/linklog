@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Just a moment…</title>
+    <link
+      rel="icon"
+      href="/public/assets/collect-fav.svg"
+      <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <style>
+      body {
+        width: 100vw;
+        height: 100vh;
+        margin: 0px;
+        padding: 0px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      :root {
+        --color: #1c74e3;
+        --color-hover: #1a69c9;
+      }
+
+      * {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+      }
+      a {
+        color: #565656;
+        text-decoration: none;
+        opacity: 0.83;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .main {
+        display: flex;
+        gap: 4px;
+        flex-direction: column;
+        width: 300px;
+        margin-top: 20vh;
+      }
+
+      .main > p {
+        font-family: inherit;
+        text-align: center;
+        font-size: 23px;
+        margin-top: 5px;
+      }
+
+      .button {
+        border: none;
+        background-color: var(--color);
+        width: 100%;
+        height: 65px;
+        border-radius: 8px;
+        display: flex;
+        font-weight: 500;
+        gap: 10px;
+        align-items: center;
+        font-size: 15px;
+        cursor: pointer;
+        box-shadow: 0 5px 0 var(--color-hover), 0 2px 24px #1a69c96e;
+        transition: background-color 0.3s, transform 0.3s;
+      }
+      .button:active {
+        transform: scale(0.98);
+      }
+      .button .box {
+        width: 20px;
+        height: 20px;
+        margin-left: auto;
+        margin-right: 20px;
+
+        background: url("https://api.iconify.design/grommet-icons/link-next.svg?color=white")
+          no-repeat center center / contain;
+        transition: opacity 0.3s, margin-right 0.3s;
+      }
+      .button:hover {
+        background-color: var(--color-hover);
+      }
+      .button:hover .box {
+        margin-right: 15px;
+      }
+
+      .loading {
+        cursor: progress;
+        pointer-events: none;
+      }
+      .loading .boxA {
+        border-radius: 50px;
+        border: 4px solid transparent;
+        border-right: 4px solid #d3e0f5;
+        background-color: transparent;
+        animation: load 1s infinite linear;
+        margin-right: 20px;
+        pointer-events: none;
+        margin-left: auto;
+        background-image: none;
+      }
+      .loading .col {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .loading .button {
+        transform: scale(1.02);
+      }
+      .button span {
+        pointer-events: none;
+        color: white;
+        margin-left: 20px;
+        font-size: 20px;
+        transition: all 0.3s;
+
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      .col {
+        display: flex;
+        align-items: center;
+        transition: opacity 0.3s;
+      }
+      .col p {
+        color: #9f9f9f;
+        font-size: 11px;
+        max-width: 240px;
+        margin-top: 2em;
+        line-height: 1.4;
+      }
+      @keyframes load {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .balls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <div class="balls">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <style>
+            .spinner_qM83 {
+              animation: spinner_8HQG 1.05s infinite;
+            }
+            .spinner_oXPr {
+              animation-delay: 0.1s;
+            }
+            .spinner_ZTLf {
+              animation-delay: 0.2s;
+            }
+            @keyframes spinner_8HQG {
+              0%,
+              57.14% {
+                animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1);
+                transform: translate(0);
+              }
+              28.57% {
+                animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33);
+                transform: translateY(-6px);
+              }
+              100% {
+                transform: translate(0);
+              }
+            }
+          </style>
+          <circle class="spinner_qM83" cx="4" cy="12" r="3" />
+          <circle class="spinner_qM83 spinner_oXPr" cx="12" cy="12" r="3" />
+          <circle class="spinner_qM83 spinner_ZTLf" cx="20" cy="12" r="3" />
+        </svg>
+      </div>
+      <p>You are about to be redirected</p>
+      <button class="button" onclick="init()" tabindex="1">
+        <span>Proceed to link</span>
+        <span style="margin-bottom: -20px; opacity: 0; position: absolute">
+          Please wait...
+        </span>
+
+        <div class="box"></div>
+      </button>
+      <div class="col">
+        <!-- prettier-ignore -->
+        <p>
+          By continuing, you accept our
+          <a href="/legal">ToS and Privacy Policy</a>. <a href="/">Learn more</a>
+        </p>
+      </div>
+    </div>
+  </body>
+  <script src="/api/script.js"></script>
+  <script>
+    function init() {
+      const label1 = document.querySelector(".button span");
+      const label2 = document.querySelectorAll(".button span")[1];
+      const box = document.querySelector(".button .box");
+      box.style.opacity = "0";
+      box.style.marginRight = "10px";
+
+      document.body.classList.add("loading");
+      label1.style.marginTop = "-20px";
+      label1.style.opacity = "0";
+      label2.style.marginBottom = "0px";
+      label2.style.opacity = "1";
+
+      setTimeout(() => {
+        box.style.transition = "opacity .3s";
+        box.style.opacity = "1";
+        box.style.marginRight = "20px";
+        box.classList.add("boxA");
+      }, 300);
+
+      let ii = setInterval(async () => {
+        if (!data) return;
+
+        clearInterval(ii);
+
+        const { url } = await (
+          await fetch(
+            "/api/exchange?id=" + location.pathname.replaceAll("/", ""),
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            }
+          )
+        ).json();
+
+        window.location.replace(url);
+      }, 10);
+    }
+
+    var data = false;
+    userInfo().then((x) => {
+      data = x;
+    });
+  </script>
+</html>

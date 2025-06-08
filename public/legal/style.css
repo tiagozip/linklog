@@ -1,0 +1,30 @@
+:root {
+  --foreground: 13, 13, 14;
+  --background: 255, 255, 255;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: rgb(var(--background));
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: #4A4A4A;
+}
+
+main {
+  max-width: 1000px;
+  margin: 4em auto;
+  padding: 10px;
+  line-height: 1.75;
+}
+
+a {
+  color: black;
+}

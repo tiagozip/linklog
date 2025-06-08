@@ -1029,7 +1029,7 @@ const views = {
         
         <div class="link-meta">
           <div class="meta-item">
-            <span class="meta-label">Target URL</span>
+            <span class="meta-label">Redirects to</span>
             <a href="${utils.escapeHtml(
               response.url
             )}" target="_blank" class="meta-value link-external">
@@ -1045,7 +1045,7 @@ const views = {
             </a>
           </div>
           <div class="meta-item">
-            <span class="meta-label">Total Visits</span>
+            <span class="meta-label">Total visits</span>
             <span class="meta-value visit-count">${
               response.hits?.length || 0
             }</span>

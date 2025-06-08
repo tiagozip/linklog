@@ -106,7 +106,7 @@ aside ul a[disabled] {
 }
 
 .btn-primary:hover {
-  background: rgb(124, 58, 237);
+  background: rgb(157, 93, 202);
 }
 
 .btn-secondary {
@@ -443,7 +443,7 @@ aside ul a[disabled] {
 }
 
 .btn-view-details:hover {
-  background: rgb(124, 58, 237);
+  background: rgb(157, 93, 202);
 }
 
 .empty-hits {

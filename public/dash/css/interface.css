@@ -78,14 +78,13 @@ aside ul a {
   background: transparent;
 }
 
-aside ul a:hover {
-  background: rgb(var(--background));
+aside ul a.active {
   color: rgb(var(--accent));
+  font-weight: 600;
 }
 
-aside ul a.active {
-  background: rgb(var(--accent));
-  color: white;
+aside ul a:hover {
+  font-weight: 600;
 }
 
 aside ul a[disabled] {

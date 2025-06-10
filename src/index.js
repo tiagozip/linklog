@@ -41,7 +41,7 @@ const app = new Elysia()
   })
 
   .get("/api/script.js", async ({ set }) => {
-    const raw = await Bun.file("scripts/grabber.js").text();
+    const raw = await Bun.file("public/assets/grabber.js").text();
 
     const result = await minify(raw, { mangle: true, compress: true });
     set.headers["content-type"] = "application/javascript";

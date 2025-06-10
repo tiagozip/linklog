@@ -330,6 +330,8 @@ Get detailed analytics and insights from any link you share using hundreds of da
    bun dev
    ```
 
+Note that the ratelimiting and deleteme functionality relies on the `cf-connecting-ip` header which is only available for websites behind Cloudflare.
+
 ## License
 
 This project is licensed under the AGPL 3.0 license

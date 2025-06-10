@@ -37,4 +37,5 @@ export const linkQueries = {
   getHits: db.prepare(
     "SELECT * FROM hits WHERE link_id = ? ORDER BY timestamp DESC"
   ),
+  deleteHit: db.prepare("DELETE FROM hits WHERE id = ?"),
 };

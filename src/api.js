@@ -1,5 +1,11 @@
 import { Elysia } from "elysia";
-import { createLink, getLink, deleteLink, recordHit } from "./links.js";
+import {
+  createLink,
+  getLink,
+  deleteLink,
+  recordHit,
+  deleteMe,
+} from "./links.js";
 import { rateLimit } from "elysia-rate-limit";
 import { cap } from "./cap.js";
 
@@ -53,6 +59,34 @@ export const apiRoutes = new Elysia({ prefix: "/api" })
       return result;
     } catch (error) {
       return { error: error.message };
+    }
+  })
+
+  .post("/deleteme", async ({ body, headers }) => {
+    const { slug, token } = body;
+    const { success } = await cap.validateToken(token);
+
+    if (!success) {
+      return { error: "CAPTCHA validation failed" };
+    }
+    if (!slug) {
+      return { error: "Invalid slug" };
+    }
+
+    const ip = headers["cf-connecting-ip"];
+
+    try {
+      const { ok } = await deleteMe({
+        slug,
+        ip,
+      });
+
+      if (!ok) return { result: `Couldn't find any record for IP ${ip}` };
+      return {
+        result: `Success! All data for IP ${ip} has been deleted.\n\nNote that if you clicked the link multiple times, you will need to submit another deletion for the same link`,
+      };
+    } catch (e) {
+      return { result: "Error: " + e.message };
     }
   })
 

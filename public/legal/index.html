@@ -11,7 +11,7 @@
   <body>
     <main>
       <a href="/">← Back</a>
-      <h1>Terms of Service and Privacy Policy for LinkLog</h1>
+      <h1>Terms and Privacy</h1>
       <p>
         This page contains the Terms of Service ("Terms") and Privacy Policy
         ("Policy") that govern your access to and use of LinkLog. Please review
@@ -550,15 +550,7 @@
       <ol>
         <li>
           For any questions or clarifications regarding these Terms, please
-          contact us via our contact form at
-          <a
-            href="https://tiagorangel.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            tiagorangel.com/contact
-          </a>
-          .
+          contact us.
         </li>
         <li>
           To report any violations of these Terms (e.g., abusive links, spam),
@@ -795,13 +787,7 @@
           <ol type="a">
             <li>
               <strong>To Request Deletion:</strong>
-              Please send an email containing your current IP address and the
-              *exact full shortened URL* (e.g., `/1ns815`) from which you wish
-              your data removed to
-              <a href="mailto:false-stilt-trout@duck.com">
-                false-stilt-trout@duck.com
-              </a>
-              .
+              Please use the form at the bottom of this page.
             </li>
             <li>
               <strong>Limitations:</strong>
@@ -833,17 +819,7 @@
         </li>
         <li>
           <strong>How to Exercise Your Rights:</strong>
-          To exercise any of these rights, please contact us via our contact
-          form at
-          <a
-            href="https://tiagorangel.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            tiagorangel.com/contact
-          </a>
-          , or for deletion requests, specifically to the email provided in
-          7.1.b.
+          To exercise any of these rights, use the form below.
         </li>
       </ol>
 
@@ -887,15 +863,7 @@
       <ol>
         <li>
           If you have any questions or concerns about this Privacy Policy or our
-          data practices, please contact us via our contact form at:
-          <a
-            href="https://tiagorangel.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            tiagorangel.com/contact
-          </a>
-          .
+          data practices, please contact us.
         </li>
       </ol>
 
@@ -904,12 +872,79 @@
         If you wish to prevent LinkLog or the link owner from collecting and
         viewing your data, you should refrain from clicking the "Continue"
         button or equivalent action that leads to the shortened link's
-        destination. If you have already clicked "Continue," you may submit a
-        data deletion request as described in the "Your Data Rights" section
-        (Privacy Policy, Clause 7).
+        destination. If you have already clicked "Continue", you may submit a
+        data deletion request below.
       </p>
+
+      <h3>Submit a removal</h3>
+      <p>
+        To request removal of your data, you must provide the exact shortened
+        link slug you previously clicked, and your IP address must be the same
+        as when you accessed the link. For technical reasons, we can only remove
+        data associated with a specific link and IP address; it is not possible
+        to delete all data related to you across the entire website.
+      </p>
+
+      <p>
+        A link's slug is the last characters of its URL, after the domain and
+        the slash. For example, if you clicked the link
+        <code>https://linklog.example.com/5oe7t</code>
+        , you would provide the slug
+        <code>5oe7t</code>
+        below.
+      </p>
+
+      <label for="slug">Link slug:</label>
+      <input type="text" placeholder="xxxxx" name="slug" maxlength="12" />
+
+      <cap-widget data-cap-api-endpoint="/cap/"></cap-widget>
+      <button id="deletion-request">Request deletion</button>
     </main>
   </body>
+  <script>
+    document
+      .querySelector("#deletion-request")
+      .addEventListener("click", async () => {
+        const token = document.querySelector("cap-widget").token;
+
+        if (!token)
+          return alert("Solve the CAPTCHA to send a deletion request");
+
+        const slug = document
+          .querySelector("input")
+          .value.trim()
+          .replaceAll("/");
+
+        document.querySelector("#deletion-request").disabled = true;
+        document.querySelector("#deletion-request").innerText = "Sending...";
+
+        document.querySelector("cap-widget").reset();
+
+        try {
+          const { result } = await (
+            await fetch("/api/deleteme", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                slug,
+                token
+              }),
+            })
+          ).json();
+
+          alert(result);
+        } catch (e) {
+          alert(e.message);
+        }
+
+        document.querySelector("#deletion-request").disabled = false;
+        document.querySelector("#deletion-request").innerText =
+          "Request deletion";
+      });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@cap.js/widget@0.1.15"></script>
   <script
     defer
     data-domain="linklog.tiagorangel.com"

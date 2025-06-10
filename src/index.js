@@ -49,16 +49,11 @@ const app = new Elysia()
   })
 
   .get("/:slug", async ({ params }) => {
-    const record = linkQueries.findById.get(params.slug);
-
-    if (!record) {
-      return Bun.file("public/404.html");
-    }
-
-    return Bun.file("public/collect.html");
+    return linkQueries.findById.get(params.slug)
+      ? Bun.file("public/collect.html")
+      : Bun.file("public/404.html");
   })
 
-  .all("*", () => Bun.file("public/404.html"))
   .listen(process.env.PORT || 3000);
 
 console.log(`Server running at http://localhost:${app.server?.port}`);

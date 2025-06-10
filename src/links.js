@@ -82,21 +82,6 @@ export const deleteLink = async ({ slug, key }) => {
 
   linkQueries.deleteById.run(slug);
 
-  /*
-
-  export const linkQueries = {
-    insert: db.prepare(
-      "INSERT INTO links (id, key_hash, url, user_ip, spoo_url) VALUES (?, ?, ?, ?, ?)"
-    ),
-    findById: db.prepare("SELECT * FROM links WHERE id = ?"),
-    deleteById: db.prepare("DELETE FROM links WHERE id = ?"),
-    insertHit: db.prepare("INSERT INTO hits (link_id, ip_data) VALUES (?, ?)"),
-    getHits: db.prepare(
-      "SELECT * FROM hits WHERE link_id = ? ORDER BY timestamp DESC"
-    ),
-  };
-  */
-
   linkQueries.deleteHitsByLinkId.run(slug);
   return { success: true };
 };
@@ -124,4 +109,24 @@ export const recordHit = async ({ id, ipData, userIp }) => {
   linkQueries.insertHit.run(id, JSON.stringify({ ...ipData, ip: geoData }));
 
   return { url: record.url };
+};
+
+export const deleteMe = async ({ slug, ip }) => {
+  const hits = linkQueries.getHits.all(slug);
+
+  if (!hits?.length) {
+    return { ok: false };
+  }
+
+  const hit = hits.find((hit) => {
+    return JSON.parse(hit.ip_data).ip.ip === ip;
+  });
+
+  if (!hit?.id) {
+    return { ok: false };
+  }
+
+  linkQueries.deleteHit.run(hit.id);
+
+  return { ok: true };
 };

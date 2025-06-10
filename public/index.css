@@ -20,6 +20,13 @@ body {
   line-height: 1.4;
   overflow-x: hidden;
   margin-bottom: 5em;
+
+  background: linear-gradient(
+    180deg,
+    rgba(200, 125, 255, 0.6) 0%,
+    rgba(255, 255, 255, 1) 20%,
+    rgba(255, 255, 255, 1) 100%
+  );
 }
 
 nav {
@@ -76,6 +83,7 @@ nav a.primary:hover {
   width: 60px;
   height: 60px;
   margin-bottom: 32px;
+  user-select: none;
 }
 
 .hero h1 {
@@ -84,6 +92,8 @@ nav a.primary:hover {
   letter-spacing: -0.02em;
   font-weight: 600;
   line-height: 1.1;
+  font-family: "Radio Canada Big", "Inter", -apple-system, BlinkMacSystemFont,
+    sans-serif;
 }
 
 .hero p {
@@ -298,4 +308,9 @@ nav a.primary:hover {
   .faq {
     padding: 0 16px;
   }
+}
+
+@font-face {
+  font-family: "Radio Canada Big";
+  src: url("/public/assets/radio-canada-big.woff2");
 }

@@ -31,6 +31,7 @@ const app = new Elysia()
   .use(apiRoutes)
 
   .get("/", () => Bun.file("public/index.html"))
+  .get("//", () => Bun.file("public/index.html"))
   .get("/links", () => Bun.file("public/dash/index.html"))
   .get("/legal", () => Bun.file("public/legal/index.html"))
 

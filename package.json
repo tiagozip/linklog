@@ -18,10 +18,10 @@
     "forever": "pm2 start src/index.js --name linklog"
   },
   "dependencies": {
-    "@cap.js/server": "^1.0.15",
+    "@cap.js/server": "2.0.0",
     "@elysiajs/static": "^1.3.0",
-    "elysia": "^1.3.4",
+    "elysia": "^1.3.5",
     "elysia-rate-limit": "latest",
-    "terser": "^5.41.0"
+    "terser": "^5.43.1"
   }
 }

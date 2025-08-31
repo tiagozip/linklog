@@ -27,15 +27,16 @@ db.exec(`
 `);
 
 export const linkQueries = {
-  insert: db.prepare(
-    "INSERT INTO links (id, key_hash, url, user_ip, spoo_url) VALUES (?, ?, ?, ?, ?)"
-  ),
-  findById: db.prepare("SELECT * FROM links WHERE id = ?"),
-  deleteById: db.prepare("DELETE FROM links WHERE id = ?"),
-  deleteHitsByLinkId: db.prepare("DELETE FROM hits WHERE link_id = ?"),
-  insertHit: db.prepare("INSERT INTO hits (link_id, ip_data) VALUES (?, ?)"),
-  getHits: db.prepare(
-    "SELECT * FROM hits WHERE link_id = ? ORDER BY timestamp DESC"
-  ),
-  deleteHit: db.prepare("DELETE FROM hits WHERE id = ?"),
+	insert: db.prepare(
+		"INSERT INTO links (id, key_hash, url, user_ip, spoo_url) VALUES (?, ?, ?, ?, ?)",
+	),
+	findById: db.prepare("SELECT * FROM links WHERE id = ?"),
+	deleteById: db.prepare("DELETE FROM links WHERE id = ?"),
+	deleteHitsByLinkId: db.prepare("DELETE FROM hits WHERE link_id = ?"),
+	insertHit: db.prepare("INSERT INTO hits (link_id, ip_data) VALUES (?, ?)"),
+	getHits: db.prepare(
+		"SELECT * FROM hits WHERE link_id = ? ORDER BY timestamp DESC",
+	),
+	deleteHit: db.prepare("DELETE FROM hits WHERE id = ?"),
+	updateUrl: db.prepare("UPDATE links SET url = ? WHERE id = ?"),
 };

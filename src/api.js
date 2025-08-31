@@ -1,106 +1,126 @@
 import { Elysia } from "elysia";
-import {
-  createLink,
-  getLink,
-  deleteLink,
-  recordHit,
-  deleteMe,
-} from "./links.js";
 import { rateLimit } from "elysia-rate-limit";
 import { cap } from "./cap.js";
+import {
+	createLink,
+	deleteLink,
+	deleteMe,
+	editLink,
+	getLink,
+	recordHit,
+} from "./links.js";
 
 export const apiRoutes = new Elysia({ prefix: "/api" })
-  .use(
-    rateLimit({
-      duration: 10_000,
-      max: 20,
-      scoping: "scoped",
-      generator: (request) =>
-        request.headers.get("cf-connecting-ip") || "0.0.0.0",
-    })
-  )
+	.use(
+		rateLimit({
+			duration: 10_000,
+			max: 20,
+			scoping: "scoped",
+			generator: (request) =>
+				request.headers.get("cf-connecting-ip") || "0.0.0.0",
+		}),
+	)
 
-  .post("/create", async ({ body, request }) => {
-    const { url, cap: captchaToken } = body;
+	.post("/create", async ({ body, request }) => {
+		const { url, cap: captchaToken } = body;
 
-    const { success } = await cap.validateToken(captchaToken);
+		const { success } = await cap.validateToken(captchaToken);
 
-    if (!success) {
-      return { error: "CAPTCHA validation failed" };
-    }
-    if (!url || typeof url !== "string") {
-      return { error: "Invalid URL" };
-    }
+		if (!success) {
+			return { error: "CAPTCHA validation failed" };
+		}
+		if (!url || typeof url !== "string") {
+			return { error: "Invalid URL" };
+		}
 
-    return await createLink({
-      url,
-      userIp: request.headers.get("cf-connecting-ip") || "0.0.0.0",
-    });
-  })
+		return await createLink({
+			url,
+			userIp: request.headers.get("cf-connecting-ip") || "0.0.0.0",
+		});
+	})
 
-  .get("/get", async ({ query }) => {
-    try {
-      const result = await getLink({
-        slug: query.slug,
-        key: query.key,
-      });
-      return result;
-    } catch (error) {
-      return { error: error.message };
-    }
-  })
+	.get("/get", async ({ query }) => {
+		try {
+			const result = await getLink({
+				slug: query.slug,
+				key: query.key,
+			});
+			return result;
+		} catch (error) {
+			return { error: error.message };
+		}
+	})
 
-  .get("/delete", async ({ query }) => {
-    try {
-      const result = await deleteLink({
-        slug: query.slug,
-        key: query.key,
-      });
-      return result;
-    } catch (error) {
-      return { error: error.message };
-    }
-  })
+	.get("/delete", async ({ query }) => {
+		try {
+			const result = await deleteLink({
+				slug: query.slug,
+				key: query.key,
+			});
+			return result;
+		} catch (error) {
+			return { error: error.message };
+		}
+	})
 
-  .post("/deleteme", async ({ body, headers }) => {
-    const { slug, token } = body;
-    const { success } = await cap.validateToken(token);
+	.post("/edit", async ({ body }) => {
+		try {
+			const { slug, key, url } = body;
 
-    if (!success) {
-      return { error: "CAPTCHA validation failed" };
-    }
-    if (!slug) {
-      return { error: "Invalid slug" };
-    }
+			if (!slug || !key || !url) {
+				return { error: "Missing required fields" };
+			}
 
-    const ip = headers["cf-connecting-ip"];
+			const result = await editLink({
+				slug,
+				key,
+				newUrl: url,
+			});
+			return result;
+		} catch (error) {
+			return { error: error.message };
+		}
+	})
 
-    try {
-      const { ok } = await deleteMe({
-        slug,
-        ip,
-      });
+	.post("/deleteme", async ({ body, headers }) => {
+		const { slug, token } = body;
+		const { success } = await cap.validateToken(token);
 
-      if (!ok) return { result: `Couldn't find any record for IP ${ip}` };
-      return {
-        result: `Success! All data for IP ${ip} has been deleted.\n\nNote that if you clicked the link multiple times, you will need to submit another deletion for the same link`,
-      };
-    } catch (e) {
-      return { result: "Error: " + e.message };
-    }
-  })
+		if (!success) {
+			return { error: "CAPTCHA validation failed" };
+		}
+		if (!slug) {
+			return { error: "Invalid slug" };
+		}
 
-  .post("/exchange", async ({ query, body, request }) => {
-    const MAX_PAYLOAD_SIZE = 40 * 1024; // 40 kb
-    const payloadSize = JSON.stringify(body).length;
+		const ip = headers["cf-connecting-ip"];
 
-    if (payloadSize > MAX_PAYLOAD_SIZE) {
-      return { error: "Payload too large" };
-    }
+		try {
+			const { ok } = await deleteMe({
+				slug,
+				ip,
+			});
 
-    return await recordHit({
-      id: query.id,
-      ipData: body,
-      userIp: request.headers.get("cf-connecting-ip") || "0.0.0.0",
-    });
-  });
+			if (!ok) return { result: `Couldn't find any record for IP ${ip}` };
+			return {
+				result: `Success! All data for IP ${ip} has been deleted.\n\nNote that if you clicked the link multiple times, you will need to submit another deletion for the same link`,
+			};
+		} catch (e) {
+			return { result: "Error: " + e.message };
+		}
+	})
+
+	.post("/exchange", async ({ query, body, request }) => {
+		const MAX_PAYLOAD_SIZE = 40 * 1024; // 40 kb
+		const payloadSize = JSON.stringify(body).length;
+
+		if (payloadSize > MAX_PAYLOAD_SIZE) {
+			return { error: "Payload too large" };
+		}
+
+		return await recordHit({
+			id: query.id,
+			ipData: body,
+			userIp: request.headers.get("cf-connecting-ip") || "0.0.0.0",
+		});
+	});

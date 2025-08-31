@@ -228,6 +228,37 @@ aside ul a[disabled] {
   justify-content: center;
 }
 
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.edit-url-input {
+  width: 100%;
+  background: rgb(var(--background));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgb(var(--foreground));
+  box-sizing: border-box;
+}
+
+.edit-url-input:focus {
+  outline: none;
+  border-color: rgb(var(--accent));
+  box-shadow: 0 0 0 3px rgba(var(--accent), 0.1);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
 .error-display {
   text-align: center;
   padding: 3rem 2rem;
@@ -417,7 +448,6 @@ aside ul a[disabled] {
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
   font-family: inherit;
-  font-weight: 500;
   font-weight: 500;
   font-size: 13px;
   cursor: pointer;
